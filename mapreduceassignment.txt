@@ -1,0 +1,21 @@
+Found 4 items
+drwx------   - root hdfs          0 2021-07-20 11:50 /user/root/.staging
+drwxr-xr-x   - root hdfs          0 2021-07-17 05:51 /user/root/wcoutnputnew
+drwxr-xr-x   - root hdfs          0 2021-07-20 11:50 /user/root/wcoutnputnew1
+-rw-r--r--   1 root hdfs         67 2021-07-15 20:00 /user/root/wordcount.txt
+[root@sandbox-hdp user]# hdfs dfs -cat /user/root/wcoutnputnew1
+cat: `/user/root/wcoutnputnew1': Is a directory
+[root@sandbox-hdp user]# hdfs dfs -ls /user/root/wcoutnputnew1
+Found 2 items
+-rw-r--r--   1 root hdfs          0 2021-07-20 11:50 /user/root/wcoutnputnew1/_SUCCESS
+-rw-r--r--   1 root hdfs         58 2021-07-20 11:50 /user/root/wcoutnputnew1/part-00000
+[root@sandbox-hdp user]# hdfs dfs -cat /user/root/wcoutnputnew1/part-00000
+brown   1
+dogs    2
+fox     1
+jumped  3
+lazy    1
+over    1
+quick   2
+the     1
+[root@sandbox-hdp user]#
