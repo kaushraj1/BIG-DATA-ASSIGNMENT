@@ -1,0 +1,1505 @@
+CREATE DATABASE IF NOT EXISTS ineuron_db;
+
+SHOW DATABASES;
+
+INFO  : Completed executing command(queryId=hive_20210720004241_783d63e9-45e2-4745-9bb5-bb459b4a797c); Time taken: 0.021 seconds
+INFO  : OK
++---------------------+
+|    database_name    |
++---------------------+
+| default             |
+| foodmart            |
+| ineuron_db          |
+| information_schema  |
+| sys                 |
++---------------------+
+5 rows selected (0.224 seconds)
+
+
+
+set hive.cli.print.current.db=true;(not working)
+
+SHOW DATABASES LIKE 'a.*';
++----------------------------------------------------+
+|                   createtab_stmt                   |
++----------------------------------------------------+
+| CREATE TABLE `emp_details`(                        |
+|   `emp_name` string,                               |
+|   `unit` string,                                   |
+|   `exp` int,                                       |
+|   `location` string)                               |
+| ROW FORMAT SERDE                                   |
+|   'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'  |
+| WITH SERDEPROPERTIES (                             |
+|   'field.delim'=',',                               |
+|   'serialization.format'=',')                      |
+| STORED AS INPUTFORMAT                              |
+|   'org.apache.hadoop.mapred.TextInputFormat'       |
+| OUTPUTFORMAT                                       |
+|   'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat' |
+| LOCATION                                           |
+|   'hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/emp_details' |
+| TBLPROPERTIES (                                    |
+|   'bucketing_version'='2',                         |
+|   'transactional'='true',                          |
+|   'transactional_properties'='insert_only',        |
+|   'transient_lastDdlTime'='1626734252')            |
++----------------------------------------------------+
+
+USE ineuron_db;
+
+
+INFO  : Compiling command(queryId=hive_20210720004318_21697218-6264-4480-8f14-e6e27271ac3e): USE ineuron_db
+INFO  : Semantic Analysis Completed (retrial = false)
+INFO  : Returning Hive schema: Schema(fieldSchemas:null, properties:null)
+INFO  : Completed compiling command(queryId=hive_20210720004318_21697218-6264-4480-8f14-e6e27271ac3e); Time taken: 0.475 seconds
+INFO  : Executing command(queryId=hive_20210720004318_21697218-6264-4480-8f14-e6e27271ac3e): USE ineuron_db
+INFO  : Starting task [Stage-0:DDL] in serial mode
+INFO  : Completed executing command(queryId=hive_20210720004318_21697218-6264-4480-8f14-e6e27271ac3e); Time taken: 0.051 seconds
+INFO  : OK
+No rows affected (0.563 seconds)
+
+DROP DATABASE ineuron_db;
+
+CREATE DATABASE ineuron_db
+LOCATION '/user/ineuron/mydb';
+
+No rows affected (0.563 seconds)
+0: jdbc:hive2://sandbox-hdp.hortonworks.com:2> CREATE DATABASE ineuron_db
+. . . . . . . . . . . . . . . . . . . . . . .> LOCATION '/user/ineuron/mydb';
+Error: Error while compiling statement: FAILED: HiveAccessControlException Permission denied: user [hive] does not have [ALL] privilege on [hdfs://sandbox-hdp.hortonworks.com:8020/user/ineuron/mydb] (state=42000,code=40000)
+
+
+DESCRIBE DATABASE ineuron_db;
+
+INFO  : Starting task [Stage-0:DDL] in serial mode
+INFO  : Completed executing command(queryId=hive_20210720004515_ee6c64cb-3b88-4c8b-84c2-53797950f287); Time taken: 0.025 seconds
+INFO  : OK
++-------------+----------+----------------------------------------------------+-------------+-------------+-------------+
+|   db_name   | comment  |                      location                      | owner_name  | owner_type  | parameters  |
++-------------+----------+----------------------------------------------------+-------------+-------------+-------------+
+| ineuron_db  |          | hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db | hive        | USER        |             |
++-------------+----------+----------------------------------------------------+-------------+-------------+-------------+
+
+
+
+DROP DATABASE IF EXISTS ineuron_db;
+
+DROP DATABASE IF EXISTS ineuron_db CASCADE;
+
+
+
+
+
+
+ALTER TABLE employee_details
+CHANGE COLUMN emp_name emppp_name STRING;
+
+
+LOAD DATA LOCAL INPATH '/tmp/employee.csv' INTO TABLE employee;
+
+
+vi employee.csv
+101,Amit,HADOOP:HIVE:SPARK:BIG-DATA
+102,Sumit,HIVE:OOZIE:HADOOP:SPARK:STORM
+103,Rohit,KAFKA:CASSANDRA:HBASE
+
+cp employee.csv /tmp
+
+CREATE TABLE employee
+(
+id INT,
+name STRING,
+skills ARRAY<STRING>
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+COLLECTION ITEMS TERMINATED BY ':'
+STORED AS TEXTFILE;
+
+LOAD DATA LOCAL INPATH '/tmp/employee.csv' INTO TABLE employee;
+
+SELECT 
+size(skills),
+array_contains(skills, 'HADOOP'),
+sort_array(skills),
+concat_ws("|", skills)
+FROM employee;
+
+
+SELECT explode(skills) AS skills FROM employee;
+
+SELECT id, name, skill
+FROM employee LATERAL VIEW explode(skills) skill_set 
+AS skill;
+
+
+vi users.txt
+
+
+1	Amit	100	DNA
+2	Sumit	200	DNA
+3	Yadav	300	DNA
+4	Sunil	500	FCS
+5	Kranti	100	FCS
+6	Mahoor	200	FCS
+8	Chandra	500	DNA
+
+vi locations.txt
+
+1	UP
+2	BIHAR
+3	MP
+4	AP
+5	MAHARASHTRA
+6	GOA
+7	JHARKHAND
+
+USE ineuron_db;
+
+CREATE TABLE users
+(
+id INT,
+name STRING,
+salary INT,
+unit STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+CREATE TABLE locations
+(
+id INT,
+location STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY '\t'
+STORED AS TEXTFILE;
+
+cp users.txt /tmp
+cp locations.txt /tmp
+
+LOAD DATA LOCAL INPATH '/tmp/users.txt'
+INTO TABLE users;
+
+LOAD DATA LOCAL INPATH '/tmp/locations.txt'
+INTO TABLE locations;
+
+
+
+SELECT * FROM users ORDER BY name ASC;
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 8         | Chandra     | 500           | DNA         |
+| 5         | Kranti      | 100           | FCS         |
+| 6         | Mahoor      | 200           | FCS         |
+| 2         | Sumit       | 200           | DNA         |
+| 4         | Sunil       | 500           | FCS         |
+| 3         | Yadav       | 300           | DNA         |
++-----------+-------------+---------------+-------------+
+
+SELECT * FROM users SORT BY name ASC;
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 5         | Kranti      | 100           | FCS         |
+| 4         | Sunil       | 500           | FCS         |
+| 3         | Yadav       | 300           | DNA         |
+| 8         | Chandra     | 500           | DNA         |
+| 6         | Mahoor      | 200           | FCS         |
+| 2         | Sumit       | 200           | DNA         |
++-----------+-------------+---------------+-------------+
+7 rows selected (132.425 seconds)
+
+The two queries look almost identical, but if more than one reducer is invoked, the output will be sorted differently.
+
+set mapred.reduce.tasks=2;
+SELECT * FROM users SORT BY name ASC;
+
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 5         | Kranti      | 100           | FCS         |
+| 4         | Sunil       | 500           | FCS         |
+| 3         | Yadav       | 300           | DNA         |
+| 8         | Chandra     | 500           | DNA         |
+| 6         | Mahoor      | 200           | FCS         |
+| 2         | Sumit       | 200           | DNA         |
++-----------+-------------+---------------+-------------+
+
+
+
+SET mapred.reduce.tasks=2;
+SELECT * FROM users DISTRIBUTE BY unit SORT BY name ASC;
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 8         | Chandra     | 500           | DNA         |
+| 2         | Sumit       | 200           | DNA         |
+| 3         | Yadav       | 300           | DNA         |
+| 5         | Kranti      | 100           | FCS         |
+| 6         | Mahoor      | 200           | FCS         |
+| 4         | Sunil       | 500           | FCS         |
++-----------+-------------+---------------+-------------+
+
+SELECT * FROM users CLUSTER BY unit;
+
+
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
+| 1         | Amit        | 100           | DNA         |
+| 2         | Sumit       | 200           | DNA         |
+| 3         | Yadav       | 300           | DNA         |
+| 8         | Chandra     | 500           | DNA         |
+| 4         | Sunil       | 500           | FCS         |
+| 5         | Kranti      | 100           | FCS         |
+| 6         | Mahoor      | 200           | FCS         |
++-----------+-------------+---------------+-------------+
+
+
+
+
+
+
+
+
+CREATE TABLE buck_users
+(
+id INT,
+name STRING,
+salary INT,
+unit STRING
+)
+CLUSTERED BY (id)
+SORTED BY (id)
+INTO 2 BUCKETS;
+
+CREATE TABLE buck_locations
+(
+id INT,
+location STRING
+)
+CLUSTERED BY (id)
+SORTED BY (id)
+INTO 2 BUCKETS;
+
+SET hive.enforce.bucketing=true;     (this command not executed)
+
+INSERT OVERWRITE TABLE buck_users
+SELECT * FROM users;
+
+--View the number of files created at the table location.
+--It should be two.
+
+
+[root@sandbox-hdp ~]# hdfs dfs -ls /warehouse/tablespace/managed/hive/ineuron_db.db/buck_users//base_0000001 Found 2 items
+-rw-rw-rw-+  1 hive hadoop        539 2021-07-19 23:58 /warehouse/tablespace/managed/hive/ineuron_db.db/buck_users/base_0000001/000000_0
+-rw-rw-rw-+  1 hive hadoop        539 2021-07-20 00:01 /warehouse/tablespace/managed/hive/ineuron_db.db/buck_users/base_0000001/000001_0
+
+INSERT OVERWRITE TABLE buck_locations
+SELECT * FROM locations;
+
+
+Found 1 items
+drwxrwxrwx+  - hive hadoop          0 2021-07-20 00:09 /warehouse/tablespace/managed/hive/ineuron_db.db/bulocations/base_0000001
+[root@sandbox-hdp ~]# hdfs dfs -ls /warehouse/tablespace/managed/hive/ineuron_db.db/buck_locations/base_0001
+Found 2 items
+-rw-rw-rw-+  1 hive hadoop        328 2021-07-20 00:08 /warehouse/tablespace/managed/hive/ineuron_db.db/bulocations/base_0000001/000000_0
+-rw-rw-rw-+  1 hive hadoop        313 2021-07-20 00:09 /warehouse/tablespace/managed/hive/ineuron_db.db/bulocations/base_0000001/000001_0
+
+------------------------------------------------------------------------------------------------------------------------------
+Inner Join
+------------------------------------------------------------------------------------------------------------------------------
+
+
+SELECT * FROM buck_users u INNER JOIN buck_locations l
+ON u.id = l.id;
+
+INFO  : OK
++-------+---------+-----------+---------+-------+--------------+
+| u.id  | u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+---------+-----------+---------+-------+--------------+
+| 1     | Amit    | 100       | DNA     | 1     | UP           |
+| 4     | Sunil   | 500       | FCS     | 4     | AP           |
+| 5     | Kranti  | 100       | FCS     | 5     | MAHARASHTRA  |
+| 2     | Sumit   | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav   | 300       | DNA     | 3     | MP           |
+| 6     | Mahoor  | 200       | FCS     | 6     | GOA          |
++-------+---------+-----------+---------+-------+--------------+
+6 rows selected (46.904 seconds)
+
+
+------------------------------------------------------------------------------------------------------------------------------
+Left Outer Join
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u LEFT OUTER JOIN buck_locations l
+ON u.id = l.id;
+
+0e-9570-dba06e5c460b); Time taken: 35.822 seconds
+INFO  : OK
++-------+----------+-----------+---------+-------+--------------+
+| u.id  |  u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+----------+-----------+---------+-------+--------------+
+| 1     | Amit     | 100       | DNA     | 1     | UP           |
+| 4     | Sunil    | 500       | FCS     | 4     | AP           |
+| 5     | Kranti   | 100       | FCS     | 5     | MAHARASHTRA  |
+| 8     | Chandra  | 500       | DNA     | NULL  | NULL         |
+| 2     | Sumit    | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav    | 300       | DNA     | 3     | MP           |
+| 6     | Mahoor   | 200       | FCS     | 6     | GOA          |
++-------+----------+-----------+---------+-------+--------------+
+7 rows selected (38.825 seconds)
+
+------------------------------------------------------------------------------------------------------------------------------
+Right Outer Join
+------------------------------------------------------------------------------------------------------------------------------
+
+
+SELECT * FROM buck_users u RIGHT OUTER JOIN buck_locations l
+ON u.id = l.id;
+
++-------+---------+-----------+---------+-------+--------------+
+| u.id  | u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+---------+-----------+---------+-------+--------------+
+| 2     | Sumit   | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav   | 300       | DNA     | 3     | MP           |
+| 6     | Mahoor  | 200       | FCS     | 6     | GOA          |
+| NULL  | NULL    | NULL      | NULL    | 7     | JHARKHAND    |
+| 1     | Amit    | 100       | DNA     | 1     | UP           |
+| 4     | Sunil   | 500       | FCS     | 4     | AP           |
+| 5     | Kranti  | 100       | FCS     | 5     | MAHARASHTRA  |
++-------+---------+-----------+---------+-------+--------------+
+
+------------------------------------------------------------------------------------------------------------------------------
+Full Outer Join
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u FULL OUTER JOIN buck_locations l
+ON u.id = l.id;
+
+INFO  : Completed executing command(queryId=hive_20210720001850_1e813185-0bc4-4d8b-899d-2900c71a6dd5); Time taken: 105.887 seconds
+INFO  : OK
++-------+----------+-----------+---------+-------+--------------+
+| u.id  |  u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+----------+-----------+---------+-------+--------------+
+| 2     | Sumit    | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav    | 300       | DNA     | 3     | MP           |
+| 6     | Mahoor   | 200       | FCS     | 6     | GOA          |
+| NULL  | NULL     | NULL      | NULL    | 7     | JHARKHAND    |
+| 1     | Amit     | 100       | DNA     | 1     | UP           |
+| 4     | Sunil    | 500       | FCS     | 4     | AP           |
+| 5     | Kranti   | 100       | FCS     | 5     | MAHARASHTRA  |
+| 8     | Chandra  | 500       | DNA     | NULL  | NULL         |
++-------+----------+-----------+---------+-------+--------------+
+8 rows selected (109.95 seconds)
+
+------------------------------------------------------------------------------------------------------------------------------
+Cartesian Cross Product Join (Less Used)
+------------------------------------------------------------------------------------------------------------------------------
+
+SELECT * FROM buck_users u JOIN buck_locations l
+ON u.id = l.id;
+
+INFO  : OK
++-------+---------+-----------+---------+-------+--------------+
+| u.id  | u.name  | u.salary  | u.unit  | l.id  |  l.location  |
++-------+---------+-----------+---------+-------+--------------+
+| 1     | Amit    | 100       | DNA     | 1     | UP           |
+| 4     | Sunil   | 500       | FCS     | 4     | AP           |
+| 5     | Kranti  | 100       | FCS     | 5     | MAHARASHTRA  |
+| 2     | Sumit   | 200       | DNA     | 2     | BIHAR        |
+| 3     | Yadav   | 300       | DNA     | 3     | MP           |
+| 6     | Mahoor  | 200       | FCS     | 6     | GOA          |
++-------+---------+-----------+---------+-------+--------------+
+6 rows selected (52.994 seconds)
+
+----------------------------------------------------------------------
+CREATING emp_details TABLE
+----------------------------------------------------------------------
+create table emp_details
+(
+emp_name string,
+unit string,
+exp int,
+location string
+)
+row format delimited
+fields terminated by ',';
+STORED AS TEXTFILE;
+
+
+LOAD DATA LOCAL INPATH '/tmp/emp_details1.txt' INTO TABLE emp_details;
+
+
+[root@sandbox-hdp ~]# hdfs dfs -ls /warehouse/tablespace/managed/hive
+Found 5 items
+drwxrwxrwx+  - hive hadoop          0 2021-07-20 03:00 /warehouse/tablespace/managed/hive/emp_details
+drwxrwxrwx+  - hive hadoop          0 2021-07-19 23:17 /warehouse/tablespace/managed/hive/employee
+drwxrwxrwx   - hive hadoop          0 2018-11-29 18:01 /warehouse/tablespace/managed/hive/foodmart.db
+drwxrwxrwx+  - hive hadoop          0 2021-07-20 00:49 /warehouse/tablespace/managed/hive/ineuron_db.db
+drwxrwxrwx+  - hdfs hadoop          0 2021-07-14 04:44 /warehouse/tablespace/managed/hive/sys.db
+[root@sandbox-hdp ~]#
+
+----------------------------------------------------------------------
+CREATING emp_details_partitioned TABLE
+----------------------------------------------------------------------
+
+create table emp_details_partitioned
+(
+emp_name string,
+unit string,
+exp int
+)
+partitioned by (location string);
+
+----------------------------------------------------------------------
+LOADING emp_details_partitioned TABLE with Static Partitions
+----------------------------------------------------------------------
+
+select emp_name, unit, exp from emp_details
+where location = 'bbsr';
+
+INFO  : Completed executing command(queryId=hive_20210720031300_b99e27f8-a179-4e4b-ae7d-f5d9204ef59d); Time taken: 0.01 seconds
+INFO  : OK
++-----------+-------+------+
+| emp_name  | unit  | exp  |
++-----------+-------+------+
+| kaushal   | 12    | 4    |
+| Amit      | 23    | 5    |
+| amit      | 12    | 40   |
++-----------+-------+------+
+3 rows selected (0.876 seconds)
+
+insert overwrite table emp_details_partitioned
+partition(location = 'bbsr')
+select emp_name, unit, exp from emp_details
+where location = 'bbsr';
+
+
+INFO  : Status: DAG finished successfully in 351.34 seconds
+INFO  :
+INFO  : Query Execution Summary
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  : OPERATION                            DURATION
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  : Compile Query                           1.64s
+INFO  : Prepare Plan                           19.96s
+INFO  : Get Query Coordinator (AM)              0.00s
+INFO  : Submit Plan                             3.20s
+INFO  : Start DAG                               3.79s
+INFO  : Run DAG                               351.34s
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :
+INFO  : Task Execution Summary
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :   VERTICES      DURATION(ms)   CPU_TIME(ms)    GC_TIME(ms)   INPUT_RECORDS   OUTPUT_RECORDS
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :      Map 1         250732.00         22,020            817               6                1
+INFO  :  Reducer 2          91712.00         23,150          1,943               1                0
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :
+INFO  : org.apache.tez.common.counters.DAGCounter:
+INFO  :    NUM_SUCCEEDED_TASKS: 3
+INFO  :    TOTAL_LAUNCHED_TASKS: 3
+INFO  :    AM_CPU_MILLISECONDS: 42430
+INFO  :    AM_GC_TIME_MILLIS: 605
+INFO  : File System Counters:
+INFO  :    FILE_BYTES_READ: 291
+INFO  :    FILE_BYTES_WRITTEN: 179
+INFO  :    HDFS_BYTES_READ: 109
+INFO  :    HDFS_BYTES_WRITTEN: 1202
+INFO  :    HDFS_READ_OPS: 10
+INFO  :    HDFS_WRITE_OPS: 6
+INFO  :    HDFS_OP_CREATE: 4
+INFO  :    HDFS_OP_GET_FILE_STATUS: 8
+INFO  :    HDFS_OP_OPEN: 2
+INFO  :    HDFS_OP_RENAME: 2
+INFO  : org.apache.tez.common.counters.TaskCounter:
+INFO  :    REDUCE_INPUT_GROUPS: 1
+INFO  :    REDUCE_INPUT_RECORDS: 1
+INFO  :    COMBINE_INPUT_RECORDS: 0
+INFO  :    SPILLED_RECORDS: 2
+INFO  :    NUM_SHUFFLED_INPUTS: 1
+INFO  :    NUM_SKIPPED_INPUTS: 1
+INFO  :    NUM_FAILED_SHUFFLE_INPUTS: 0
+INFO  :    MERGED_MAP_OUTPUTS: 1
+INFO  :    GC_TIME_MILLIS: 2760
+INFO  :    TASK_DURATION_MILLIS: 288926
+INFO  :    CPU_MILLISECONDS: 45170
+INFO  :    PHYSICAL_MEMORY_BYTES: 1868562432
+INFO  :    VIRTUAL_MEMORY_BYTES: 7962112000
+INFO  :    COMMITTED_HEAP_BYTES: 1868562432
+INFO  :    INPUT_RECORDS_PROCESSED: 6
+INFO  :    INPUT_SPLIT_LENGTH_BYTES: 109
+INFO  :    OUTPUT_RECORDS: 1
+INFO  :    OUTPUT_LARGE_RECORDS: 0
+INFO  :    OUTPUT_BYTES: 111
+INFO  :    OUTPUT_BYTES_WITH_OVERHEAD: 119
+INFO  :    OUTPUT_BYTES_PHYSICAL: 123
+INFO  :    ADDITIONAL_SPILLS_BYTES_WRITTEN: 0
+INFO  :    ADDITIONAL_SPILLS_BYTES_READ: 123
+INFO  :    ADDITIONAL_SPILL_COUNT: 0
+INFO  :    SHUFFLE_CHUNK_COUNT: 1
+INFO  :    SHUFFLE_BYTES: 123
+INFO  :    SHUFFLE_BYTES_DECOMPRESSED: 119
+INFO  :    SHUFFLE_BYTES_TO_MEM: 0
+INFO  :    SHUFFLE_BYTES_TO_DISK: 0
+INFO  :    SHUFFLE_BYTES_DISK_DIRECT: 123
+INFO  :    NUM_MEM_TO_DISK_MERGES: 0
+INFO  :    NUM_DISK_TO_DISK_MERGES: 0
+INFO  :    SHUFFLE_PHASE_TIME: 3199
+INFO  :    MERGE_PHASE_TIME: 3877
+INFO  :    FIRST_EVENT_RECEIVED: 2588
+INFO  :    LAST_EVENT_RECEIVED: 2588
+INFO  : HIVE:
+INFO  :    CREATED_FILES: 2
+INFO  :    DESERIALIZE_ERRORS: 0
+INFO  :    RECORDS_IN_Map_1: 6
+INFO  :    RECORDS_OUT_0: 1
+INFO  :    RECORDS_OUT_1_default.emp_details_partitioned: 3
+INFO  :    RECORDS_OUT_INTERMEDIATE_Map_1: 1
+INFO  :    RECORDS_OUT_INTERMEDIATE_Reducer_2: 0
+INFO  :    RECORDS_OUT_OPERATOR_FIL_11: 3
+INFO  :    RECORDS_OUT_OPERATOR_FS_10: 1
+INFO  :    RECORDS_OUT_OPERATOR_FS_3: 3
+INFO  :    RECORDS_OUT_OPERATOR_GBY_6: 1
+INFO  :    RECORDS_OUT_OPERATOR_GBY_8: 1
+INFO  :    RECORDS_OUT_OPERATOR_MAP_0: 0
+INFO  :    RECORDS_OUT_OPERATOR_RS_7: 1
+INFO  :    RECORDS_OUT_OPERATOR_SEL_2: 3
+INFO  :    RECORDS_OUT_OPERATOR_SEL_5: 3
+INFO  :    RECORDS_OUT_OPERATOR_SEL_9: 1
+INFO  :    RECORDS_OUT_OPERATOR_TS_0: 6
+INFO  : Shuffle Errors:
+INFO  :    BAD_ID: 0
+INFO  :    CONNECTION: 0
+INFO  :    IO_ERROR: 0
+INFO  :    WRONG_LENGTH: 0
+INFO  :    WRONG_MAP: 0
+INFO  :    WRONG_REDUCE: 0
+INFO  : Shuffle Errors_Reducer_2_INPUT_Map_1:
+INFO  :    BAD_ID: 0
+INFO  :    CONNECTION: 0
+INFO  :    IO_ERROR: 0
+INFO  :    WRONG_LENGTH: 0
+INFO  :    WRONG_MAP: 0
+INFO  :    WRONG_REDUCE: 0
+INFO  : TaskCounter_Map_1_INPUT_emp_details:
+INFO  :    INPUT_RECORDS_PROCESSED: 6
+INFO  :    INPUT_SPLIT_LENGTH_BYTES: 109
+INFO  : TaskCounter_Map_1_OUTPUT_Reducer_2:
+INFO  :    ADDITIONAL_SPILLS_BYTES_READ: 0
+INFO  :    ADDITIONAL_SPILLS_BYTES_WRITTEN: 0
+INFO  :    ADDITIONAL_SPILL_COUNT: 0
+INFO  :    OUTPUT_BYTES: 111
+INFO  :    OUTPUT_BYTES_PHYSICAL: 123
+INFO  :    OUTPUT_BYTES_WITH_OVERHEAD: 119
+INFO  :    OUTPUT_LARGE_RECORDS: 0
+INFO  :    OUTPUT_RECORDS: 1
+INFO  :    SHUFFLE_CHUNK_COUNT: 1
+INFO  :    SPILLED_RECORDS: 1
+INFO  : TaskCounter_Reducer_2_INPUT_Map_1:
+INFO  :    ADDITIONAL_SPILLS_BYTES_READ: 123
+INFO  :    ADDITIONAL_SPILLS_BYTES_WRITTEN: 0
+INFO  :    COMBINE_INPUT_RECORDS: 0
+INFO  :    FIRST_EVENT_RECEIVED: 2588
+INFO  :    LAST_EVENT_RECEIVED: 2588
+INFO  :    MERGED_MAP_OUTPUTS: 1
+INFO  :    MERGE_PHASE_TIME: 3877
+INFO  :    NUM_DISK_TO_DISK_MERGES: 0
+INFO  :    NUM_FAILED_SHUFFLE_INPUTS: 0
+INFO  :    NUM_MEM_TO_DISK_MERGES: 0
+INFO  :    NUM_SHUFFLED_INPUTS: 1
+INFO  :    NUM_SKIPPED_INPUTS: 1
+INFO  :    REDUCE_INPUT_GROUPS: 1
+INFO  :    REDUCE_INPUT_RECORDS: 1
+INFO  :    SHUFFLE_BYTES: 123
+INFO  :    SHUFFLE_BYTES_DECOMPRESSED: 119
+INFO  :    SHUFFLE_BYTES_DISK_DIRECT: 123
+INFO  :    SHUFFLE_BYTES_TO_DISK: 0
+INFO  :    SHUFFLE_BYTES_TO_MEM: 0
+INFO  :    SHUFFLE_PHASE_TIME: 3199
+INFO  :    SPILLED_RECORDS: 1
+INFO  : TaskCounter_Reducer_2_OUTPUT_out_Reducer_2:
+INFO  :    OUTPUT_RECORDS: 0
+INFO  : org.apache.hadoop.hive.ql.exec.tez.HiveInputCounters:
+INFO  :    GROUPED_INPUT_SPLITS_Map_1: 1
+INFO  :    INPUT_DIRECTORIES_Map_1: 1
+INFO  :    INPUT_FILES_Map_1: 2
+INFO  :    RAW_INPUT_SPLITS_Map_1: 2
+INFO  : Starting task [Stage-2:DEPENDENCY_COLLECTION] in serial mode
+INFO  : Starting task [Stage-0:MOVE] in serial mode
+INFO  : Loading data to table default.emp_details_partitioned partition (location=bbsr) from hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/emp_details_partitioned/location=bbsr/.hive-staging_hive_2021-07-20_03-14-14_417_9114551930150898288-1/-ext-10000
+INFO  : Starting task [Stage-3:STATS] in serial mode
+INFO  : Completed executing command(queryId=hive_20210720031414_0f753aeb-6465-481e-9cc8-304cfd4a6b6c); Time taken: 446.042 seconds
+INFO  : OK
+No rows affected (448.301 seconds)
+0: jdbc:hive2://sandbox-hdp.hortonworks.com:2>
+
+
+
+----------------------------------------------------------------------
+LOADING emp_details_partitioned TABLE with Dynamic Partitions
+----------------------------------------------------------------------
+set hive.exec.dynamic.partition.mode=nonstrict;
+insert overwrite table emp_details_partitioned
+partition (location)
+select * from emp_details;
+
+INFO  : Status: DAG finished successfully in 128.51 seconds
+INFO  :
+INFO  : Query Execution Summary
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  : OPERATION                            DURATION
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  : Compile Query                           1.52s
+INFO  : Prepare Plan                            0.62s
+INFO  : Get Query Coordinator (AM)              0.00s
+INFO  : Submit Plan                            26.15s
+INFO  : Start DAG                               2.65s
+INFO  : Run DAG                               128.51s
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :
+INFO  : Task Execution Summary
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :   VERTICES      DURATION(ms)   CPU_TIME(ms)    GC_TIME(ms)   INPUT_RECORDS   OUTPUT_RECORDS
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :      Map 1          68933.00         25,310          2,952               6                3
+INFO  :  Reducer 2          53940.00         17,800            855               3                0
+INFO  : ----------------------------------------------------------------------------------------------
+INFO  :
+INFO  : org.apache.tez.common.counters.DAGCounter:
+INFO  :    NUM_SUCCEEDED_TASKS: 3
+INFO  :    TOTAL_LAUNCHED_TASKS: 3
+INFO  :    AM_CPU_MILLISECONDS: 36800
+INFO  :    AM_GC_TIME_MILLIS: 59
+INFO  : File System Counters:
+INFO  :    FILE_BYTES_READ: 636
+INFO  :    FILE_BYTES_WRITTEN: 357
+INFO  :    HDFS_BYTES_READ: 109
+INFO  :    HDFS_BYTES_WRITTEN: 3366
+INFO  :    HDFS_READ_OPS: 27
+INFO  :    HDFS_WRITE_OPS: 20
+INFO  :    HDFS_OP_CREATE: 9
+INFO  :    HDFS_OP_GET_FILE_STATUS: 25
+INFO  :    HDFS_OP_MKDIRS: 6
+INFO  :    HDFS_OP_OPEN: 2
+INFO  :    HDFS_OP_RENAME: 5
+INFO  : org.apache.tez.common.counters.TaskCounter:
+INFO  :    REDUCE_INPUT_GROUPS: 3
+INFO  :    REDUCE_INPUT_RECORDS: 3
+INFO  :    COMBINE_INPUT_RECORDS: 0
+INFO  :    SPILLED_RECORDS: 6
+INFO  :    NUM_SHUFFLED_INPUTS: 2
+INFO  :    NUM_SKIPPED_INPUTS: 0
+INFO  :    NUM_FAILED_SHUFFLE_INPUTS: 0
+INFO  :    MERGED_MAP_OUTPUTS: 2
+INFO  :    GC_TIME_MILLIS: 3807
+INFO  :    TASK_DURATION_MILLIS: 92524
+INFO  :    CPU_MILLISECONDS: 43110
+INFO  :    PHYSICAL_MEMORY_BYTES: 2125463552
+INFO  :    VIRTUAL_MEMORY_BYTES: 7966715904
+INFO  :    COMMITTED_HEAP_BYTES: 2125463552
+INFO  :    INPUT_RECORDS_PROCESSED: 6
+INFO  :    INPUT_SPLIT_LENGTH_BYTES: 109
+INFO  :    OUTPUT_RECORDS: 3
+INFO  :    OUTPUT_LARGE_RECORDS: 0
+INFO  :    OUTPUT_BYTES: 299
+INFO  :    OUTPUT_BYTES_WITH_OVERHEAD: 317
+INFO  :    OUTPUT_BYTES_PHYSICAL: 301
+INFO  :    ADDITIONAL_SPILLS_BYTES_WRITTEN: 0
+INFO  :    ADDITIONAL_SPILLS_BYTES_READ: 301
+INFO  :    ADDITIONAL_SPILL_COUNT: 0
+INFO  :    SHUFFLE_CHUNK_COUNT: 1
+INFO  :    SHUFFLE_BYTES: 301
+INFO  :    SHUFFLE_BYTES_DECOMPRESSED: 317
+INFO  :    SHUFFLE_BYTES_TO_MEM: 0
+INFO  :    SHUFFLE_BYTES_TO_DISK: 0
+INFO  :    SHUFFLE_BYTES_DISK_DIRECT: 301
+INFO  :    NUM_MEM_TO_DISK_MERGES: 0
+INFO  :    NUM_DISK_TO_DISK_MERGES: 0
+INFO  :    SHUFFLE_PHASE_TIME: 4170
+INFO  :    MERGE_PHASE_TIME: 8007
+INFO  :    FIRST_EVENT_RECEIVED: 3313
+INFO  :    LAST_EVENT_RECEIVED: 3313
+INFO  : HIVE:
+INFO  :    CREATED_DYNAMIC_PARTITIONS: 3
+INFO  :    CREATED_FILES: 5
+INFO  :    DESERIALIZE_ERRORS: 0
+INFO  :    RECORDS_IN_Map_1: 6
+INFO  :    RECORDS_OUT_0: 3
+INFO  :    RECORDS_OUT_1_default.emp_details_partitioned: 6
+INFO  :    RECORDS_OUT_INTERMEDIATE_Map_1: 3
+INFO  :    RECORDS_OUT_INTERMEDIATE_Reducer_2: 0
+INFO  :    RECORDS_OUT_OPERATOR_FS_2: 6
+INFO  :    RECORDS_OUT_OPERATOR_FS_9: 3
+INFO  :    RECORDS_OUT_OPERATOR_GBY_5: 3
+INFO  :    RECORDS_OUT_OPERATOR_GBY_7: 3
+INFO  :    RECORDS_OUT_OPERATOR_MAP_0: 0
+INFO  :    RECORDS_OUT_OPERATOR_RS_6: 3
+INFO  :    RECORDS_OUT_OPERATOR_SEL_1: 6
+INFO  :    RECORDS_OUT_OPERATOR_SEL_4: 6
+INFO  :    RECORDS_OUT_OPERATOR_SEL_8: 3
+INFO  :    RECORDS_OUT_OPERATOR_TS_0: 6
+INFO  : Shuffle Errors:
+INFO  :    BAD_ID: 0
+INFO  :    CONNECTION: 0
+INFO  :    IO_ERROR: 0
+INFO  :    WRONG_LENGTH: 0
+INFO  :    WRONG_MAP: 0
+INFO  :    WRONG_REDUCE: 0
+INFO  : Shuffle Errors_Reducer_2_INPUT_Map_1:
+INFO  :    BAD_ID: 0
+INFO  :    CONNECTION: 0
+INFO  :    IO_ERROR: 0
+INFO  :    WRONG_LENGTH: 0
+INFO  :    WRONG_MAP: 0
+INFO  :    WRONG_REDUCE: 0
+INFO  : TaskCounter_Map_1_INPUT_emp_details:
+INFO  :    INPUT_RECORDS_PROCESSED: 6
+INFO  :    INPUT_SPLIT_LENGTH_BYTES: 109
+INFO  : TaskCounter_Map_1_OUTPUT_Reducer_2:
+INFO  :    ADDITIONAL_SPILLS_BYTES_READ: 0
+INFO  :    ADDITIONAL_SPILLS_BYTES_WRITTEN: 0
+INFO  :    ADDITIONAL_SPILL_COUNT: 0
+INFO  :    OUTPUT_BYTES: 299
+INFO  :    OUTPUT_BYTES_PHYSICAL: 301
+INFO  :    OUTPUT_BYTES_WITH_OVERHEAD: 317
+INFO  :    OUTPUT_LARGE_RECORDS: 0
+INFO  :    OUTPUT_RECORDS: 3
+INFO  :    SHUFFLE_CHUNK_COUNT: 1
+INFO  :    SPILLED_RECORDS: 3
+INFO  : TaskCounter_Reducer_2_INPUT_Map_1:
+INFO  :    ADDITIONAL_SPILLS_BYTES_READ: 301
+INFO  :    ADDITIONAL_SPILLS_BYTES_WRITTEN: 0
+INFO  :    COMBINE_INPUT_RECORDS: 0
+INFO  :    FIRST_EVENT_RECEIVED: 3313
+INFO  :    LAST_EVENT_RECEIVED: 3313
+INFO  :    MERGED_MAP_OUTPUTS: 2
+INFO  :    MERGE_PHASE_TIME: 8007
+INFO  :    NUM_DISK_TO_DISK_MERGES: 0
+INFO  :    NUM_FAILED_SHUFFLE_INPUTS: 0
+INFO  :    NUM_MEM_TO_DISK_MERGES: 0
+INFO  :    NUM_SHUFFLED_INPUTS: 2
+INFO  :    NUM_SKIPPED_INPUTS: 0
+INFO  :    REDUCE_INPUT_GROUPS: 3
+INFO  :    REDUCE_INPUT_RECORDS: 3
+INFO  :    SHUFFLE_BYTES: 301
+INFO  :    SHUFFLE_BYTES_DECOMPRESSED: 317
+INFO  :    SHUFFLE_BYTES_DISK_DIRECT: 301
+INFO  :    SHUFFLE_BYTES_TO_DISK: 0
+INFO  :    SHUFFLE_BYTES_TO_MEM: 0
+INFO  :    SHUFFLE_PHASE_TIME: 4170
+INFO  :    SPILLED_RECORDS: 3
+INFO  : TaskCounter_Reducer_2_OUTPUT_out_Reducer_2:
+INFO  :    OUTPUT_RECORDS: 0
+INFO  : org.apache.hadoop.hive.ql.exec.tez.HiveInputCounters:
+INFO  :    GROUPED_INPUT_SPLITS_Map_1: 1
+INFO  :    INPUT_DIRECTORIES_Map_1: 1
+INFO  :    INPUT_FILES_Map_1: 2
+INFO  :    RAW_INPUT_SPLITS_Map_1: 2
+INFO  : Starting task [Stage-2:DEPENDENCY_COLLECTION] in serial mode
+INFO  : Starting task [Stage-0:MOVE] in serial mode
+INFO  : Loading data to table default.emp_details_partitioned partition (location=null) from hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/emp_details_partitioned/.hive-staging_hive_2021-07-20_03-29-27_302_681480663864030066-1/-ext-10000
+INFO  :
+
+INFO  :          Time taken to load dynamic partitions: 3.573 seconds
+INFO  :          Time taken for adding to write entity : 0.009 seconds
+INFO  : Starting task [Stage-3:STATS] in serial mode
+INFO  : Completed executing command(queryId=hive_20210720032927_2ceda17f-b4d0-4e06-b45d-3c5dcb3ad623); Time taken: 169.685 seconds
+INFO  : OK
+No rows affected (171.787 seconds)
+0: jdbc:hive2://sandbox-hdp.hortonworks.com:2>
+
+
+
+select count(*) from emp_details where location='bbsr';
+
+INFO  : Completed executing command(queryId=hive_20210720033609_0224bec2-fcc5-491e-839d-57875237af5f); Time taken: 21.645 seconds
+INFO  : OK
++------+
+| _c0  |
++------+
+| 3    |
++------+
+1 row selected (23.364 seconds)
+
+
+
+select count(*) from emp_details where emp_name='Amit';
+INFO  : OK
++------+
+| _c0  |
++------+
+| 1    |
++------+
+1 row selected (21.238 seconds)
+
+select count(*) from emp_details_partitioned where location='bbsr';
+
+6 rows selected (3.626 seconds)
+0: jdbc:hive2://sandbox-hdp.hortonworks.com:2> select count(*) from emp_details_partitioned where location='bbsr';
+INFO  : Compiling command(queryId=hive_20210720034249_1e79ce94-07e3-4ce1-8f15-aa7e63cffc19): select count(*) from emp_details_partitioned where location='bbsr'
+INFO  : Semantic Analysis Completed (retrial = false)
+INFO  : Returning Hive schema: Schema(fieldSchemas:[FieldSchema(name:_c0, type:bigint, comment:null)], properties:null)
+INFO  : Completed compiling command(queryId=hive_20210720034249_1e79ce94-07e3-4ce1-8f15-aa7e63cffc19); Time taken: 2.563 seconds
+INFO  : Executing command(queryId=hive_20210720034249_1e79ce94-07e3-4ce1-8f15-aa7e63cffc19): select count(*) from emp_details_partitioned where location='bbsr'
+INFO  : Completed executing command(queryId=hive_20210720034249_1e79ce94-07e3-4ce1-8f15-aa7e63cffc19); Time taken: 0.01 seconds
+INFO  : OK
++------+
+| _c0  |
++------+
+| 3    |
++------+
+1 row selected (2.828 seconds)
+
+
+select count(*) from emp_details_partitioned where emp_name='Amit';
+
+INFO  : Completed executing command(queryId=hive_20210720034317_777f883c-cf55-49bd-8f19-cc912cbf22f3); Time taken: 24.758 seconds
+INFO  : OK
++------+
+| _c0  |
++------+
+| 1    |
++------+
+1 row selected (26.246 seconds)
+
+
+
+----------------------------------------------------------------------
+DROPIING PARTITIONS FROM emp_details_partitioned TABLE
+----------------------------------------------------------------------
+
+alter table emp_details_partitioned drop partition(location='BBSR');
+
+
+===============================================
+SELECT * from users TABLESAMPLE(BUCKET 3 OUT OF 10 ON rand()) ;
+
+No rows affected (0.225 seconds)
+0: jdbc:hive2://sandbox-hdp.hortonworks.com:2> SELECT * from users TABLESAMPLE(BUCKET 3 OUT OF 10 ON rand()) ;
+INFO  : Compiling command(queryId=hive_20210720034920_ddf175f0-81ab-4263-9b36-2de88708e205): SELECT * from users TABLESAMPLE(BUCKET 3 OUT OF 10 ON rand())
+INFO  : Semantic Analysis Completed (retrial = false)
+INFO  : Returning Hive schema: Schema(fieldSchemas:[FieldSchema(name:users.id, type:int, comment:null), FieldSchema(name:users.name, type:string, comment:null), FieldSchema(name:users.salary, type:int, comment:null), FieldSchema(name:users.unit, type:string, comment:null)], properties:null)
+INFO  : Completed compiling command(queryId=hive_20210720034920_ddf175f0-81ab-4263-9b36-2de88708e205); Time taken: 0.324 seconds
+INFO  : Executing command(queryId=hive_20210720034920_ddf175f0-81ab-4263-9b36-2de88708e205): SELECT * from users TABLESAMPLE(BUCKET 3 OUT OF 10 ON rand())
+INFO  : Completed executing command(queryId=hive_20210720034920_ddf175f0-81ab-4263-9b36-2de88708e205); Time taken: 0.028 seconds
+INFO  : OK
++-----------+-------------+---------------+-------------+
+| users.id  | users.name  | users.salary  | users.unit  |
++-----------+-------------+---------------+-------------+
++-----------+-------------+---------------+-------------+
+No rows selected (0.827 seconds)
+
+
+SELECT * from users TABLESAMPLE(BUCKET 3 OUT OF 10 ON rand()) s;
+
+INFO  : OK
++-------+---------+-----------+---------+
+| s.id  | s.name  | s.salary  | s.unit  |
++-------+---------+-----------+---------+
+| 2     | Sumit   | 200       | DNA     |
++-------+---------+-----------+---------+
+1 row selected (0.717 seconds)
+
+SELECT * from users TABLESAMPLE(BUCKET 2 OUT OF 4 ON name) s;
+
+INFO  : OK
++-------+---------+-----------+---------+
+| s.id  | s.name  | s.salary  | s.unit  |
++-------+---------+-----------+---------+
+| 2     | Sumit   | 200       | DNA     |
++-------+---------+-----------+---------+
+1 row selected (0.923 seconds)
+
+
+---------------------------
+Creating regular text table
+---------------------------
+create table text_table
+(
+c1 int,
+c2 int,
+c3 int,
+c4 int
+)
+row format delimited
+fields terminated by '::'
+STORED AS TEXTFILE;
+
+---------------------------
+Loading into text table
+---------------------------
+
+LOAD DATA LOCAL INPATH '/tmp/ratings.dat' INTO TABLE text_table;
+
+05-bfa9-7992a7f466e4); Time taken: 130.09 seconds
+INFO  : OK
++----------+
+|   _c0    |
++----------+
+| 1000209  |
++----------+
+1 row selected (132.841 seconds)
+
+
+---------------------------
+Creating SequenceFile table
+---------------------------
+
+create table seq_table
+(
+c1 int,
+c2 int,
+c3 int,
+c4 int
+)
+stored as SEQUENCEFILE;
+
+---------------------------
+Creating RC Format table
+---------------------------
+
+create table rc_table
+(
+c1 int,
+c2 int,
+c3 int,
+c4 int
+)
+stored as RCFILE;
+
+---------------------------
+Creating Parquet File table
+---------------------------
+
+create table prq_table
+(
+c1 int,
+c2 int,
+c3 int,
+c4 int
+)
+stored as PARQUET;
+---------------------------
+Creating ORC Format table
+---------------------------
+
+create table orc_table
+(
+c1 int,
+c2 int,
+c3 int,
+c4 int
+)
+stored as ORC;
+
+
+----------------------------------------
+Loading All the tables in a single pass
+----------------------------------------
+
+FROM text_table
+INSERT OVERWRITE TABLE seq_table SELECT *
+INSERT OVERWRITE TABLE rc_table SELECT *
+INSERT OVERWRITE TABLE prq_table SELECT *
+INSERT OVERWRITE TABLE orc_table SELECT *;
+
+
+INFO  : Starting task [Stage-4:DEPENDENCY_COLLECTION] in serial mode
+INFO  : Starting task [Stage-0:MOVE] in serial mode
+INFO  : Loading data to table ineuron_db.rc_table from hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/rc_table
+INFO  : Starting task [Stage-1:MOVE] in serial mode
+INFO  : Loading data to table ineuron_db.prq_table from hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/prq_table
+INFO  : Starting task [Stage-2:MOVE] in serial mode
+INFO  : Loading data to table ineuron_db.orc_table from hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/orc_table/.hive-staging_hive_2021-07-20_05-11-26_567_7897392517514709707-1/-ext-10002
+INFO  : Starting task [Stage-5:STATS] in serial mode
+INFO  : Starting task [Stage-6:STATS] in serial mode
+INFO  : Starting task [Stage-7:STATS] in serial mode
+INFO  : Completed executing command(queryId=hive_20210720051126_b517a5e9-06fa-41c9-b800-8d7280bc34a6); Time taken: 187.877 seconds
+INFO  : OK
+No rows affected (193.07 seconds)
+
+----------------------------------------
+Comparing sizes of loaded tables
+----------------------------------------
+
+hdfs dfs -ls hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/seq_table 
+
+[root@sandbox-hdp ~]# hdfs dfs -ls hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/seq_table/base_0000001
+Found 2 items
+-rw-rw-rw-+  1 hive hadoop   18806172 2021-07-20 05:10 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/seq_table/base_0000001/000000_0
+-rw-rw-rw-+  1 hive hadoop    8756162 2021-07-20 05:10 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/seq_table/base_0000001/000001_0
+
+hdfs dfs -ls hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/rc_table
+
+[root@sandbox-hdp ~]# hdfs dfs -ls hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/rc_table/base_0000001
+Found 2 items
+-rw-rw-rw-+  1 hive hadoop    4084436 2021-07-20 05:13 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/rc_table/base_0000001/000000_0
+-rw-rw-rw-+  1 hive hadoop    1906853 2021-07-20 05:13 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/rc_table/base_0000001/000001_0
+
+hdfs dfs -ls hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/orc_table
+
+-rw-rw-rw-+  1 hive hadoop          1 2021-07-20 05:12 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/orc_table/base_0000001/_orc_acid_version
+-rw-rw-rw-+  1 hive hadoop     894651 2021-07-20 05:13 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/orc_table/base_0000001/bucket_00000
+-rw-rw-rw-+  1 hive hadoop     407740 2021-07-20 05:13 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/orc_table/base_0000001/bucket_00001
+
+hdfs dfs -ls hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/prq_table
+
+-rw-rw-rw-+  1 hive hadoop    1074698 2021-07-20 05:13 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/prq_table/base_0000001/000000_0
+-rw-rw-rw-+  1 hive hadoop     504241 2021-07-20 05:13 hdfs://sandbox-hdp.hortonworks.com:8020/warehouse/tablespace/managed/hive/ineuron_db.db/prq_table/base_0000001/000001_0
+[root@sandbox-hdp ~]#
+
+
+SELECT location, COUNT(*) FROM emp_details GROUP BY location;
+
+----------------------------------------------------------------------------------------------
+        VERTICES      MODE        STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+----------------------------------------------------------------------------------------------
+Map 1 .......... container     SUCCEEDED      1          1        0        0       0       0
+Reducer 2 ...... container     SUCCEEDED      2          2        0        0       0       0
+----------------------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 51.69 s
+----------------------------------------------------------------------------------------------
++-----------+------+
+| location  | _c1  |
++-----------+------+
+| bbsr      | 3    |
+| blr       | 1    |
+| bnglr     | 2    |
++-----------+------+
+3 rows selected (206.608 seconds)
+
+-----------------------------------------------------------------------------------------------
+Getting number of employees present in the locations where average experience of employees is
+greater than 1.5 years
+-----------------------------------------------------------------------------------------------
+
+SELECT location, COUNT(*) FROM emp_details
+GROUP BY location
+HAVING AVG(exp) > 1.5;
+
+ime taken: 51.519 seconds
+INFO  : OK
++-----------+------+
+| location  | _c1  |
++-----------+------+
+| bbsr      | 3    |
+| blr       | 1    |
+| bnglr     | 2    |
++-----------+------+
+3 rows selected (53.953 seconds)
+
+
+-----------------------------------------------------------------------------------------------
+ORDER BY uses a single reducer
+-----------------------------------------------------------------------------------------------
+
+SELECT * FROM emp_details ORDER BY exp;
+
+
+INFO  : OK
++-----------------------+-------------------+------------------+-----------------------+
+| emp_details.emp_name  | emp_details.unit  | emp_details.exp  | emp_details.location  |
++-----------------------+-------------------+------------------+-----------------------+
+| kaushal               | 12                | 4                | bbsr                  |
+| Amit                  | 23                | 5                | bbsr                  |
+| Kulkarni              | 45                | 10               | bnglr                 |
+| saurav                | ops               | 10               | blr                   |
+| Kulkarni              | 56                | 12               | bnglr                 |
+| amit                  | 12                | 40               | bbsr                  |
++-----------------------+-------------------+------------------+-----------------------+
+6 rows selected (29.699 seconds)
+
+
+
+SELECT * FROM emp_details ORDER BY exp DESC;
+
+INFO  : OK
++-----------------------+-------------------+------------------+-----------------------+
+| emp_details.emp_name  | emp_details.unit  | emp_details.exp  | emp_details.location  |
++-----------------------+-------------------+------------------+-----------------------+
+| amit                  | 12                | 40               | bbsr                  |
+| Kulkarni              | 56                | 12               | bnglr                 |
+| Kulkarni              | 45                | 10               | bnglr                 |
+| saurav                | ops               | 10               | blr                   |
+| Amit                  | 23                | 5                | bbsr                  |
+| kaushal               | 12                | 4                | bbsr                  |
++-----------------------+-------------------+------------------+-----------------------+
+6 rows selected (31.131 seconds)
+
+
+=========================================
+--EXPLAIN command that shows the execution plan for a query. The syntax for this statement is as follows:
+--EXPLAIN [EXTENDED|DEPENDENCY|AUTHORIZATION] query
+
+INFO  : OK
++----------------------------------------------------+
+|                      Explain                       |
++----------------------------------------------------+
+| Plan optimized by CBO.                             |
+|                                                    |
+| Stage-0                                            |
+|   Fetch Operator                                   |
+|     limit:-1                                       |
+|     Select Operator [SEL_1]                        |
+|       Output:["_col0","_col1","_col2","_col3"]     |
+|       TableScan [TS_0]                             |
+|         Output:["emp_name","unit","exp","location"] |
+|                                                    |
++----------------------------------------------------+
+10 rows selected (4.49 seconds)
+
+EXPLAIN SELECT location, COUNT(*) FROM ineuron_db.emp_details GROUP BY location;
+
++----------------------------------------------------+
+|                      Explain                       |
++----------------------------------------------------+
+| Plan optimized by CBO.                             |
+|                                                    |
+| Vertex dependency in root stage                    |
+| Reducer 2 <- Map 1 (SIMPLE_EDGE)                   |
+|                                                    |
+| Stage-0                                            |
+|   Fetch Operator                                   |
+|     limit:-1                                       |
+|     Stage-1                                        |
+|       Reducer 2 vectorized                         |
+|       File Output Operator [FS_11]                 |
+|         Group By Operator [GBY_10] (rows=1 width=0) |
+|           Output:["_col0","_col1"],aggregations:["count(VALUE._col0)"],keys:KEY._col0 |
+|         <-Map 1 [SIMPLE_EDGE] vectorized           |
+|           SHUFFLE [RS_9]                           |
+|             PartitionCols:_col0                    |
+|             Group By Operator [GBY_8] (rows=1 width=0) |
+|               Output:["_col0","_col1"],aggregations:["count()"],keys:location |
+|               Select Operator [SEL_7] (rows=1 width=0) |
+|                 Output:["location"]                |
+|                 TableScan [TS_0] (rows=1 width=0)  |
+|                   ineuron_db@emp_details,emp_details, ACID table,Tbl:PARTIAL,Col:NONE,Output:["location"] |
+|                                                    |
++----------------------------------------------------+
+23 rows selected (2.572 seconds)
+
++----------------------------------------------------+
+|                      Explain                       |
++----------------------------------------------------+
+| Plan optimized by CBO.                             |
+|                                                    |
+| Stage-0                                            |
+|   Fetch Operator                                   |
+|     limit:-1                                       |
+|     Select Operator [SEL_2]                        |
+|       Output:["_col0","_col1","_col2","_col3"]     |
+|       Filter Operator [FIL_4]                      |
+|         predicate:(exp >= 2)                       |
+|         TableScan [TS_0]                           |
+|           Output:["emp_name","unit","exp","location"] |
+|                                                    |
++----------------------------------------------------+
+12 rows selected (1.313 seconds)
+
+EXPLAIN SELECT location, COUNT(*) FROM emp_details
+GROUP BY location;
+
++----------------------------------------------------+
+|                      Explain                       |
++----------------------------------------------------+
+| Plan optimized by CBO.                             |
+|                                                    |
+| Vertex dependency in root stage                    |
+| Reducer 2 <- Map 1 (SIMPLE_EDGE)                   |
+|                                                    |
+| Stage-0                                            |
+|   Fetch Operator                                   |
+|     limit:-1                                       |
+|     Stage-1                                        |
+|       Reducer 2 vectorized                         |
+|       File Output Operator [FS_11]                 |
+|         Group By Operator [GBY_10] (rows=1 width=1090) |
+|           Output:["_col0","_col1"],aggregations:["count(VALUE._col0)"],keys:KEY._col0 |
+|         <-Map 1 [SIMPLE_EDGE] vectorized           |
+|           SHUFFLE [RS_9]                           |
+|             PartitionCols:_col0                    |
+|             Group By Operator [GBY_8] (rows=1 width=1090) |
+|               Output:["_col0","_col1"],aggregations:["count()"],keys:location |
+|               Select Operator [SEL_7] (rows=1 width=1090) |
+|                 Output:["location"]                |
+|                 TableScan [TS_0] (rows=1 width=1090) |
+|                   default@emp_details,emp_details, transactional table,Tbl:COMPLETE,Col:NONE,Output:["location"] |
+|                                                    |
++----------------------------------------------------+
+23 rows selected (1.428 seconds)
+
+-------------------------------------
+EXTERNAL TableScan
+
+create external table complex_data_type_new
+(
+emp_id int,
+name map<string, string>,
+location struct<city:string, pin:int>,
+skill_set array<string>
+)
+row format delimited fields terminated by '\t'               
+collection items terminated by ','
+map keys terminated by ':'
+STORED AS TEXTFILE
+LOCATION '/tmp/exttable'
+tblproperties ("skip.header.line.count"="1"); 
+
+LOAD DATA LOCAL INPATH '/tmp/complex_data_type.txt' INTO TABLE complex_data_type_new;
+
+
+SELECT emp_id, name, location, skill_set FROM complex_data_type_new;
+
+INFO  : OK
++---------+---------------------------------------+--------------------------------+-----------------------------+
+| emp_id  |                 name                  |            location            |          skill_set          |
++---------+---------------------------------------+--------------------------------+-----------------------------+
+| 101     | {"first":"Amit","last":"Mishra"}      | {"city":"bbsr","pin":751024}   | ["Hadoop","Hive"]           |
+| 102     | {"first":"Aditya","last":"Kulkarni"}  | {"city":"bnglr","pin":123412}  | ["Hadoop","Hive","Oracle"]  |
+| NULL    | NULL                                  | NULL                           | NULL                        |
+| NULL    | NULL                                  | NULL                           | NULL                        |
++---------+---------------------------------------+--------------------------------+-----------------------------+
+
+
+
+SELECT emp_id, name['first'], location.city, skill_set[0] FROM complex_data_type_new;
+
+INFO  : OK
++---------+---------+--------+---------+
+| emp_id  |   _c1   |  city  |   _c3   |
++---------+---------+--------+---------+
+| 101     | Amit    | bbsr   | Hadoop  |
+| 102     | Aditya  | bnglr  | Hadoop  |
+| NULL    | NULL    | NULL   | NULL    |
+| NULL    | NULL    | NULL   | NULL    |
++---------+---------+--------+---------+
+4 rows selected (1.481 seconds)
+
+Using hive -e and hive -f
+--------------------------
+hive -e "SELECT * FROM complex_data_type_new LIMIT 3";
+
++-------------------------------+---------------------------------------+---------------------------------+----------------------------------+
+| complex_data_type_new.emp_id  |      complex_data_type_new.name       | complex_data_type_new.location  | complex_data_type_new.skill_set  |
++-------------------------------+---------------------------------------+---------------------------------+----------------------------------+
+| 101                           | {"first":"Amit","last":"Mishra"}      | {"city":"bbsr","pin":751024}    | ["Hadoop","Hive"]                |
+| 102                           | {"first":"Aditya","last":"Kulkarni"}  | {"city":"bnglr","pin":123412}   | ["Hadoop","Hive","Oracle"]       |
+| NULL                          | NULL                                  | NULL                            | NULL                             |
++-------------------------------+---------------------------------------+---------------------------------+----------------------------------+
+3 rows selected (2.009 seconds)
+Beeline version 3.1.0.3.0.1.0-187 by Apache Hive
+Closing: 0: jdbc:hive2://sandbox-hdp.hortonworks.com:2181/default;password=hive;serviceDiscoveryMode=zooKeeper;user=hive;zooKeeperNamespace=hiveserver2
+[root@sandbox-hdp ~]#
+
+-------------------------------------------------------------------------------
+Hive can execute one or more queries that were saved to a file using the -f file argument
+-------------------------------------------------------------------------------
+
+hive -f abs.hql;
+
+
+
+
+
+
+
+-----------------------------------------
+
+
+------------------------------------------------------------------
+Creating table on CSVSerDe e.g. "1","saurav","100"
+------------------------------------------------------------------
+CREATE TABLE csv_table(name string, location string)
+ROW FORMAT SERDE 'org.apache.hadoop.hive.serde2.OpenCSVSerde'
+WITH SERDEPROPERTIES (
+    "separatorChar" = ",",
+    "quoteChar"     = "\"",
+    "escapeChar"    = "\\"
+)
+STORED AS TEXTFILE
+TBLPROPERTIES ("skip.header.line.count"="1")
+;
+
+------------------------------------------------------------------
+Decoding the Create statement
+------------------------------------------------------------------
+-- ',' is the separator between fields
+-- ',' inside "" will not be considered as separator
+-- '\' will be the escape character
+-- first line of file will be skipped
+
+------------------------------------------------------------------
+Sample CSV File
+------------------------------------------------------------------
+
+vi csv_file.csv
+name,location
+Amit, "BBSR,India"
+Sumit, "MUM,India"
+
+------------------------------------------------------------------
+Loading in the table
+------------------------------------------------------------------
+
+LOAD DATA LOCAL INPATH '/tmp/csv_file.csv'
+OVERWRITE INTO TABLE csv_table;
+
+------------------------------------------------------------------
+Querying the table
+------------------------------------------------------------------
+
+select * from csv_table;
+
++-----------------+---------------------+
+| csv_table.name  | csv_table.location  |
++-----------------+---------------------+
+| Amit            | BBSR,India          |
+| Sumit           | MUM,India           |
++-----------------+---------------------+
+2 rows selected (2.302 seconds)
+
+select location from csv_table;
+INFO  : OK
++-------------+
+|  location   |
++-------------+
+| BBSR,India  |
+| MUM,India   |
++-------------+
+2 rows selected (0.697 seconds)
+
+----------------------------
+CREATING TABLE USING JsonSerDe
+--------------------------------------------------------------------------------
+
+CREATE TABLE json_table(name string, id bigint, skills array<string>)
+ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
+STORED AS TEXTFILE;
+
+--------------------------------------------------------------------------------
+Sample JSON File
+--------------------------------------------------------------------------------
+
+vi json_file.json
+{"name":"Amit", "id":1, "skills":["Hadoop", "Python"]}
+{"name":"Sumit", "id":2, "skills":["Hadoop", "Hive"]}
+{"name":"Rohit", "id":3, "skills":["Oozie", "Python"]}
+
+--------------------------------------------------------------------------------
+Loading DATA in table
+--------------------------------------------------------------------------------
+
+LOAD DATA LOCAL INPATH '/tmp/json_file.json'
+OVERWRITE INTO TABLE json_table;
+
+--------------------------------------------------------------------------------
+Querying the table
+--------------------------------------------------------------------------------
+
+select * from json_table;
+
++------------------+----------------+----------------------+
+| json_table.name  | json_table.id  |  json_table.skills   |
++------------------+----------------+----------------------+
+| Amit             | 1              | ["Hadoop","Python"]  |
+| Sumit            | 2              | ["Hadoop","Hive"]    |
+| Rohit            | 3              | ["Oozie","Python"]   |
++------------------+----------------+----------------------+
+
+
+select skills[0] from json_table;
+
++---------+
+|   _c0   |
++---------+
+| Python  |
+| Hive    |
+| Python  |
++---------+
+
+-----------------------------
+CREATE TABLE WITH RegexSerDe
+-----------------------------
+CREATE TABLE userlog(
+ host string,
+ user_name string,
+ domain string
+ )
+ ROW FORMAT SERDE
+ 'org.apache.hadoop.hive.contrib.serde2.RegexSerDe'
+ WITH SERDEPROPERTIES(
+ 'input.regex' = '(.*)/(.*)@(.*)',
+ 'output.format.string' = '%1$s %2$s %3$s')
+STORED AS TEXTFILE;
+
+
+-----------------------------
+DECODING the CREATE statement
+-----------------------------
+
+ 'input.regex' = '(.*)/(.*)@(.*)',
+ -- The pattern on which data is matched
+ 
+ 'output.format.string' = '%1$s %2$s %3$s');
+ -- The output display format
+
+-----------------------------
+Sample File (regex_file.txt)
+-----------------------------
+
+host1/amit@gmail
+host2/sumit@facebook
+host3/raghav@gmail
+host4/rohit@gmail
+
+-----------------------------
+LOAD DATA
+-----------------------------
+
+LOAD DATA LOCAL INPATH '/tmp/regex_file.txt'
+INTO TABLE userlog;
+
+-----------------------------
+FETCH DATA
+-----------------------------
+
+SELECT * FROM userlog;
+
++---------------+--------------------+-----------------+
+| userlog.host  | userlog.user_name  | userlog.domain  |
++---------------+--------------------+-----------------+
+| host1         | amit               | gmail           |
+| host2         | sumit              | facebook        |
+| host3         | raghav             | gmail           |
+| host4         | rohit              | gmail           |
++---------------+--------------------+-----------------+
+4 rows selected (1.233 seconds)
+
+
+
+SELECT host, user_name FROM userlog;
+
++--------+------------+
+|  host  | user_name  |
++--------+------------+
+| host1  | amit       |
+| host2  | sumit      |
+| host3  | raghav     |
+| host4  | rohit      |
++--------+------------+
+
